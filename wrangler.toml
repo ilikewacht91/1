@@ -1,0 +1,33 @@
+# Cloudflare Workers 部署配置
+# 文档: https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "who-came-wall"
+main = "src/index.js"
+# 部署时如果提示这个日期太新，改成当天日期即可。
+compatibility_date = "2026-09-01"
+
+# 静态资源目录就是项目根目录：index.html / app.js 只有一份，
+# Node 版和 Workers 版共用。其余文件由 .assetsignore 排除。
+[assets]
+directory = "."
+binding = "ASSETS"
+# 默认是"静态资源优先"，那样 index.html 会绕过 Worker，
+# 拿不到 CSP 等安全响应头。这里让 Worker 先接管所有请求。
+run_worker_first = true
+
+[observability]
+enabled = true
+
+# 与 Node 版同名的环境变量，值一律是字符串。
+[vars]
+MAX_PRINTS = "240"
+STAMP_COOLDOWN_MS = "1000"
+
+[[durable_objects.bindings]]
+name = "WALL"
+class_name = "Wall"
+
+# 免费版只能用 SQLite 后端的 Durable Object，所以必须是 new_sqlite_classes。
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Wall"]
